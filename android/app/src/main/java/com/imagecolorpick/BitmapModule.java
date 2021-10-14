@@ -30,7 +30,7 @@ public class BitmapModule extends ReactContextBaseJavaModule {
 
 
     @ReactMethod
-    public void getPixels(String filePath,double xaxis,double yaxis,final Promise promise) {
+    public void getPixels(String filePath,double xaxis,double yaxis, int width, int height,final Promise promise) {
         try {
             Log.d("dddd","dddd"+filePath);
 
@@ -46,14 +46,12 @@ public class BitmapModule extends ReactContextBaseJavaModule {
             // Bitmap bitmap = BitmapFactory.decodeStream(new FileInputStream(f), null, options);
 
 
-            Bitmap bitmap = BitmapFactory.decodeFile(filePath,options);
+            Bitmap bitmap = Bitmap.createScaledBitmap(BitmapFactory.decodeFile(filePath,options), width, height, false);
             if (bitmap == null) {
                 promise.reject("Failed to decode. Path is incorrect or image is corrupted");
                 return;
             }
 
-            int width = bitmap.getWidth();
-            int height = bitmap.getHeight();
             boolean hasAlpha = bitmap.hasAlpha();
 
             int color = bitmap.getPixel((int)xaxis, (int)yaxis);
@@ -82,7 +80,7 @@ public class BitmapModule extends ReactContextBaseJavaModule {
             result.putInt("width", width);
             result.putInt("height", height);
             result.putBoolean("hasAlpha", hasAlpha);
-            result.putString("pixels", hex.substring(0,6));
+            result.putString("pixels", hex.substring(2,8));
 
             promise.resolve(result);
 
