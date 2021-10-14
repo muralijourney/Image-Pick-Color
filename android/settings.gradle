@@ -1,0 +1,19 @@
+rootProject.name = 'ImageColorPick'
+include ':react-native-webview'
+project(':react-native-webview').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-webview/android')
+include ':@react-native-community_image-editor'
+project(':@react-native-community_image-editor').projectDir = new File(rootProject.projectDir, '../node_modules/@react-native-community/image-editor/android')
+include ':react-native-view-shot'
+project(':react-native-view-shot').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-view-shot/android')
+include ':react-native-get-pixel-fix'
+project(':react-native-get-pixel-fix').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-get-pixel-fix/android')
+include ':react-native-get-pixel'
+project(':react-native-get-pixel').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-get-pixel/android')
+include ':react-native-pixel-color'
+project(':react-native-pixel-color').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-pixel-color/android')
+include ':react-native-pixel-color'
+project(':react-native-pixel-color').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-pixel-color/android')
+include ':react-native-get-pixel-color'
+project(':react-native-get-pixel-color').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-get-pixel-color/android')
+apply from: file("../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"); applyNativeModulesSettingsGradle(settings)
+include ':app'
