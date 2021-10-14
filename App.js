@@ -33,20 +33,23 @@ const App = () => {
 const [color1, setColor1] = useState("");
 const [filePath, setFilePath] = useState({});
 
+const [x, setX] = useState(0)
+const [y, setY] = useState(0)
+const [width, setWidth] = useState(0)
+const [height, setHeight] = useState(0)
 
 
 const getColorPick = (e) =>{
   console.log("locX, locY = " + e);
 
    console.log("pageX, pageY = " + e.nativeEvent.pageX + ", " + e.nativeEvent.pageY);
-   console.log("locX, locY = " + e.nativeEvent.locationX + ", " + e.nativeEvent.locationY);
 
-   ImageColorPick.getPixels(filePath.uri.replace("file:",""),e.nativeEvent.locationX,e.nativeEvent.locationY)
+   const pressX = e.nativeEvent.pageX - x
+   const pressY = e.nativeEvent.pageY - y
+
+   ImageColorPick.getPixels(filePath.uri.replace("file:",""), pressX, pressY, width, height)
   .then((image) => {
-    console.log(image.width);
-    console.log(image.height);
-    console.log(image.hasAlpha);
-    console.log(image.pixels);
+    console.log(image)
     setColor1("#"+image.pixels);
   })
   .catch((err) => {
@@ -210,6 +213,12 @@ const getColorPick = (e) =>{
     <SafeAreaView style={{flex: 1}}>
       <View style={styles.container}>
         <Image
+          onLayout={(e) => {
+            setX(e.nativeEvent.layout.x)
+            setY(e.nativeEvent.layout.y)
+            setWidth(e.nativeEvent.layout.width)
+            setHeight(e.nativeEvent.layout.height)
+          }}
           source={{uri:filePath.uri}}
           style={styles.imageStyle}
         />
