@@ -37,6 +37,8 @@ const [x, setX] = useState(0)
 const [y, setY] = useState(0)
 const [width, setWidth] = useState(0)
 const [height, setHeight] = useState(0)
+const [primaryColors, setPrimaryColor] = useState([])
+
 
 
 const getColorPick = (e) =>{
@@ -151,10 +153,12 @@ const getColorPick = (e) =>{
           return;
         }
         setFilePath(response.assets[0]);
+        getPrimaryColor(response.assets[0].uri);
       });
     }
   };
 
+  
 
   // Choose File 
   const chooseFile = (type) => {
@@ -179,37 +183,25 @@ const getColorPick = (e) =>{
         return;
       }
       setFilePath(response.assets[0]);
+      getPrimaryColor(response.assets[0].uri);
     });
   };
 
 
-  
-  return (
-    // <View style={{ width: "100%",height:"100%"}} >
-    
-    //   {/* <Image 
-    //     style={{ width: "100%",height:"100%",backgroundColor:"yellow"}}
-    //     source={require('./assets/tiny_logo.png')}
-    //   /> */}
-    //   {/* <Image
-    //     style={{ width: "100%",height:"100%",backgroundColor:"transparent"}}
-    //     source={{
-    //       uri: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADMAAAAzCAYAAAA6oTAqAAAAEXRFWHRTb2Z0d2FyZQBwbmdjcnVzaEB1SfMAAABQSURBVGje7dSxCQBACARB+2/ab8BEeQNhFi6WSYzYLYudDQYGBgYGBgYGBgYGBgYGBgZmcvDqYGBgmhivGQYGBgYGBgYGBgYGBgYGBgbmQw+P/eMrC5UTVAAAAABJRU5ErkJggg==',
-    //     }}
-    //   /> */}
-    //     <Image
-    //     style={{ width: "100%",height:"100%",position:"absolute"}}
-    //     source={require('./assets/tiny_logo.png')}
-    //     />
-    //   <ViewShot ref={(elem)=> setCount(elem)} options={{ format: "jpg", quality: 0.9 }} style={{width:100,height:100,position:"absolute",top:top,left:left,right:right,bottom:bottom}}>
-    //      <Text>dsjfsdjhfjsdafhhjdsfhdjfjadfjhhjdsfhjasdhjfhjasdfhjjhds</Text>
-      
-    //   </ViewShot>
-    //   <Draggable  x={100} y={200} renderColor={color1} renderText=' ' isCircle  onDragRelease={(e)=> getColorPick(e)} />
-    //   <Draggable/>
-    // </View>
+  const getPrimaryColor = async (uri) => {
+    ImageColorPick.getPrimaryColorPixels(uri.replace("file:",""))
+    .then((image) => {
+      console.log(image)
+      setPrimaryColor(image)
+    })
+    .catch((err) => {
+      console.error(err);
+    });
+  }
 
-     
+
+
+  return (
     <SafeAreaView style={{flex: 1}}>
       <View style={styles.container}>
         <Image
@@ -223,7 +215,15 @@ const getColorPick = (e) =>{
           style={styles.imageStyle}
         />
         <Draggable  x={100} y={200} style={{ borderWidth: 5, borderColor:"white",}} renderColor={color1} renderText=' ' isCircle  onDragRelease={(e)=> getColorPick(e)} />
-         <Draggable/>
+         <Draggable/>ƒ
+
+         {/* <View>
+             {primaryColors.map((item, index) => {
+                 <View style={{width:100,height:60,backgroundColor:"red"}}></View>
+              }
+           )}
+         </View> */}
+
         <TouchableOpacity
           activeOpacity={0.5}
           style={styles.buttonStyle}
