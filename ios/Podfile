@@ -12,15 +12,11 @@ target 'ImageColorPick' do
     :hermes_enabled => false
   )
 
-  pod 'react-native-get-pixel-color', :path => '../node_modules/react-native-get-pixel-color'
 
-  pod 'react-native-pixel-color', :path => '../node_modules/react-native-pixel-color'
 
   pod 'react-native-view-shot', :path => '../node_modules/react-native-view-shot'
 
-  pod 'react-native-image-editor', :path => '../node_modules/@react-native-community/image-editor'
 
-  pod 'react-native-webview', :path => '../node_modules/react-native-webview'
 
   target 'ImageColorPickTests' do
     inherit! :complete

@@ -41,7 +41,6 @@ public class BitmapModule extends ReactContextBaseJavaModule {
             Log.d("dddd","dddd"+filePath);
 
             WritableNativeMap result = new WritableNativeMap();
-            WritableNativeArray pixels = new WritableNativeArray();
             BitmapFactory.Options options = new BitmapFactory.Options();
             options.inPreferredConfig = Bitmap.Config.ARGB_8888;
 
@@ -52,6 +51,8 @@ public class BitmapModule extends ReactContextBaseJavaModule {
             }
 
             boolean hasAlpha = bitmap.hasAlpha();
+            Log.d("dddd","xaxis"+xaxis);
+            Log.d("dddd","xaxis"+yaxis);
 
             int color = bitmap.getPixel((int)xaxis, (int)yaxis);
             String hex = Integer.toHexString(color);
@@ -71,13 +72,17 @@ public class BitmapModule extends ReactContextBaseJavaModule {
 
 
     @ReactMethod
-    public void getPrimaryColorPixels(String filePath,final Promise promise) {
-        Bitmap bitmap = BitmapFactory.decodeFile(filePath);
+    public void getPrimaryColorPixels(String filePath,int width, int height,int pressx,int pressy,final Promise promise) {
+        WritableArray color = Arguments.createArray();
+       Bitmap bitmap = BitmapFactory.decodeFile(filePath);
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+        Log.d("text","xyaxis Value First"+  pressx +pressy );
+       // Bitmap bitmap = Bitmap.createScaledBitmap(BitmapFactory.decodeFile(filePath,options), width, height, false);
         Palette.from(bitmap).generate(new Palette.PaletteAsyncListener() {
             @Override
             public void onGenerated(Palette palette) {
                 try {
-                    WritableArray color = Arguments.createArray();
                     List<Palette.Swatch> swatchList = palette.getSwatches();
                     for (int i=0 ;i < swatchList.size();i++) {
                         if(i<5){
@@ -87,10 +92,49 @@ public class BitmapModule extends ReactContextBaseJavaModule {
                             int r = Color.red(rgb);
                             int g = Color.green(rgb);
                             int b = Color.blue(rgb);
+
                             // add 1 value for alpha factor
                             color.pushString(String.format("#%02x%02x%02x", r, g, b));
+                            for (int x = 0; x < bitmap.getWidth(); x++) {
+                            for (int y = 0; y < bitmap.getHeight(); y++) {
+                                    int pixel = bitmap.getPixel(x,y);
+
+                                    //Reading colors
+                                    int redValue = Color.red(pixel);
+                                    int blueValue = Color.blue(pixel);
+                                    int greenValue = Color.green(pixel);
+                                    int pixel_color_first = Color.rgb(r, g, b);
+                                    int pixel_color = Color.rgb(redValue,greenValue, blueValue );
+                                    if (pixel_color_first == pixel_color) {
+                                        Log.d("text","xyaxis Value First"+  x +y);
+                                        Log.d("text","xyaxis Value"+ String.format("%s,%s", x, y));
+                                       // pixels_matching_color.add(String.format("%s,%s", x, y));
+                                        break;
+                                    }
+                                }
+                            }
+
+
+
+//                            for (int x = 0; x < bitmap.getWidth(); x++) {
+//                                for (int y = 0; y < bitmap.getHeight(); y++) {
+//                                    int primaryList = bitmap.getPixel(x, y);
+//                                    String hex = Integer.toHexString(primaryList);
+//                                    int redlist = (primaryList >> 16) & 0xFF;
+//                                    int greenlist = (primaryList >> 8) & 0xFF;
+//                                    int bluelist = primaryList & 0xFF;
+//                                    // Log.d("text","message"+String.format("#%02x%02x%02x", redlist, greenlist, bluelist)+"color"+String.format("#%02x%02x%02x", r, g, b));
+//                                    if(String.format("#%02x%02x%02x", redlist, greenlist, bluelist) == String.format("#%02x%02x%02x", r, g, b)){
+//                                        Log.d("text"," "+x +y);
+//                                    }
+//                                }
+//                            }
+
+
+
+
                         }
-                        }
+                      }
                     }
                     promise.resolve(color);
                 } catch (Exception e) {
@@ -98,8 +142,6 @@ public class BitmapModule extends ReactContextBaseJavaModule {
                 }
             }
         });
-
-
     }
 }
 

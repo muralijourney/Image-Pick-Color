@@ -20,12 +20,10 @@ import {
   TouchableOpacity,
   Image,
   NativeModules,
+  Platform,
   PermissionsAndroid
 } from 'react-native';
-
-
 const { ImageColorPick } = NativeModules;
-
 
 
 
@@ -40,9 +38,9 @@ const [height, setHeight] = useState(0)
 const [primaryColors, setPrimaryColor] = useState([])
 
 
-
-const getColorPick = (e) =>{
-  console.log("locX, locY = " + e);
+// GetColor Pick 
+const getColorPick = async (e,index) =>{
+  console.log("locX, locY = " + e +index);
 
    console.log("pageX, pageY = " + e.nativeEvent.pageX + ", " + e.nativeEvent.pageY);
 
@@ -53,6 +51,8 @@ const getColorPick = (e) =>{
   .then((image) => {
     console.log(image)
     setColor1("#"+image.pixels);
+    primaryColors[index] = "#"+image.pixels;
+    setPrimaryColor(primaryColors)
   })
   .catch((err) => {
     console.error(err);
@@ -188,17 +188,25 @@ const getColorPick = (e) =>{
   };
 
 
+  // Primary Color List 
   const getPrimaryColor = async (uri) => {
-    ImageColorPick.getPrimaryColorPixels(uri.replace("file:",""))
+    if(Platform.OS == 'android'){
+
+    ImageColorPick.getPrimaryColorPixels(uri.replace("file:",""),width, height,x,y)
     .then((image) => {
       console.log(image)
-      setPrimaryColor(image)
+      // setPrimaryColor(image)
     })
     .catch((err) => {
       console.error(err);
     });
-  }
+   }else{
+    ImageColorPick.getPrimaryColorPixels(uri.replace("file:",""),(err ,deviceId) => {
+      console.log(err,deviceId);
+   });       
 
+   }
+  }
 
 
   return (
@@ -213,22 +221,31 @@ const getColorPick = (e) =>{
           }}
           source={{uri:filePath.uri}}
           style={styles.imageStyle}
-        />
-        <Draggable  x={100} y={200} style={{ borderWidth: 5, borderColor:"white",}} renderColor={color1} renderText=' ' isCircle  onDragRelease={(e)=> getColorPick(e)} />
-         <Draggable/>ƒ
-
-         {/* <View>
-             {primaryColors.map((item, index) => {
-                 <View style={{width:100,height:60,backgroundColor:"red"}}></View>
+          />
+             {primaryColors.map((item,index) => {
+               return(
+                  <View key={index} style={{position:'absolute'}}>
+                    <Draggable  x={-110} y={102}  style={{borderWidth: 5, borderColor:"white"}} renderColor={item} renderText={index.toString()} isCircle  onDragRelease={(e)=> getColorPick(e,index)} />
+                    <Draggable/>
+                  </View>
+               )
               }
            )}
-         </View> */}
+        
+         <View style={{backgroundColor:"white",justifyContent:'center',width:'100%',height:'10%',flexDirection:'row'}}>
+             {primaryColors.map((item,index) => {
+               return(
+                  <View key={index} style={{width:50,height:65,backgroundColor:item,}}></View>
+               )
+              }
+           )}
+         </View> 
 
         <TouchableOpacity
           activeOpacity={0.5}
           style={styles.buttonStyle}
           onPress={() => captureImage('photo')}>
-          <Text style={styles.textStyle}>
+          <Text style={styles.textStyle}> 
             Launch Camera for Image
           </Text>
         </TouchableOpacity>
@@ -252,6 +269,7 @@ const styles = StyleSheet.create({
     padding: 10,
     backgroundColor: '#fff',
     alignItems: 'center',
+    flexDirection:'column'
   },
   titleText: {
     fontSize: 22,
@@ -272,8 +290,8 @@ const styles = StyleSheet.create({
     width: 250,
   },
   imageStyle: {
-    width: "100%",
-    height: "60%",
+    width: "60%",
+    height: "40%",
     margin: 5,
   },
 });
