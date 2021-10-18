@@ -1,4 +1,6 @@
 rootProject.name = 'ImageColorPick'
+include ':react-native-get-pixel-color-update'
+project(':react-native-get-pixel-color-update').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-get-pixel-color-update/android')
 include ':react-native-webview'
 project(':react-native-webview').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-webview/android')
 include ':@react-native-community_image-editor'

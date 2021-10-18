@@ -24,6 +24,8 @@ import {
   PermissionsAndroid
 } from 'react-native';
 const { ImageColorPick } = NativeModules;
+import { getPixelRGBA } from 'react-native-get-pixel';
+
 
 
 
@@ -38,26 +40,52 @@ const [height, setHeight] = useState(0)
 const [primaryColors, setPrimaryColor] = useState([])
 
 
+function componentToHex(c) {
+  var hex = c.toString(16);
+  return hex.length == 1 ? "0" + hex : hex;
+}
+
+
 // GetColor Pick 
 const getColorPick = async (e,index) =>{
-  console.log("locX, locY = " + e +index);
+   console.log("locX, locY = " + x +y);
 
    console.log("pageX, pageY = " + e.nativeEvent.pageX + ", " + e.nativeEvent.pageY);
+   const pressX = e.nativeEvent.locationX - x
+   const pressY = e.nativeEvent.locationY - y
 
-   const pressX = e.nativeEvent.pageX - x
-   const pressY = e.nativeEvent.pageY - y
+   console.log("pressX, pressY = " + e.nativeEvent +e.nativeEvent);
 
-   ImageColorPick.getPixels(filePath.uri.replace("file:",""), pressX, pressY, width, height)
-  .then((image) => {
-    console.log(image)
-    setColor1("#"+image.pixels);
-    primaryColors[index] = "#"+image.pixels;
-    setPrimaryColor(primaryColors)
-  })
-  .catch((err) => {
-    console.error(err);
-  });
+  //  getPixelRGBA(filePath.uri.replace("file:",""),e.nativeEvent.locationX, e.nativeEvent.locationY)
+  //  .then(color => {
+  //    console.log(color);
+  //    setColor1("#"+componentToHex(color[0]) + componentToHex(color[1]) + componentToHex(color[2]));
+  //    primaryColors[index] = "#"+componentToHex(color[0]) + componentToHex(color[1]) + componentToHex(color[2]);
+  //    setPrimaryColor(primaryColors)
+  //  }) // [243, 123, 0]
+  //  .catch(err => {});
 
+
+   if(Platform.OS == 'android'){
+      ImageColorPick.getPixels(filePath.uri.replace("file:",""), pressX, pressY, width, height)
+      .then((image) => {
+        console.log(image)
+        setColor1("#"+image.pixels);
+        primaryColors[index] = "#"+image.pixels;
+        setPrimaryColor(primaryColors)
+      })
+      .catch((err) => {
+        console.error(err);
+      });
+   }else{
+      ImageColorPick.getPixels(filePath.uri.replace("file:",""),Math.round(width),Math.round(height),Math.round(pressX),Math.round(pressY),(err,color) => {
+       console.log(color)
+       setColor1(color);
+       primaryColors[index] = color;
+       setPrimaryColor(primaryColors) 
+       console.log(JSON.stringify(primaryColors))
+      });      
+  }
   }
 
   
@@ -195,19 +223,19 @@ const getColorPick = async (e,index) =>{
     ImageColorPick.getPrimaryColorPixels(uri.replace("file:",""),width, height,x,y)
     .then((image) => {
       console.log(image)
-      // setPrimaryColor(image)
+      setPrimaryColor(image)
     })
     .catch((err) => {
       console.error(err);
     });
    }else{
-    ImageColorPick.getPrimaryColorPixels(uri.replace("file:",""),(err ,deviceId) => {
-      console.log(err,deviceId);
+    ImageColorPick.getPrimaryColorPixels(uri.replace("file:",""),(err,color) => {
+      console.log(JSON.stringify(color));
+      setPrimaryColor(color)
    });       
 
    }
   }
-
 
   return (
     <SafeAreaView style={{flex: 1}}>
@@ -290,8 +318,8 @@ const styles = StyleSheet.create({
     width: 250,
   },
   imageStyle: {
-    width: "60%",
-    height: "40%",
+    width: "100%",
+    height: "65%",
     margin: 5,
   },
 });
