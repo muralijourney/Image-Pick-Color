@@ -7,7 +7,8 @@
  */
 
 import React,{useRef,useState} from 'react';
-import Draggable from 'react-native-draggable';
+// import Draggable from 'react-native-draggable';
+import Draggable from './NewDraggable'
 import {
   launchCamera,
   launchImageLibrary
@@ -21,10 +22,12 @@ import {
   Image,
   NativeModules,
   Platform,
+  Dimensions,
   PermissionsAndroid
 } from 'react-native';
 const { ImageColorPick } = NativeModules;
-import { getPixelRGBA } from 'react-native-get-pixel';
+import { getPixelRGBA } from 'react-native-get-pixel-color-update';
+const {width1, height1} = Dimensions.get('window');
 
 
 
@@ -47,16 +50,17 @@ function componentToHex(c) {
 
 
 // GetColor Pick 
-const getColorPick = async (e,index) =>{
+const getColorPick = async (e,index,gestureState) =>{
    console.log("locX, locY = " + x +y);
+   console.log("index = " + index);
 
    console.log("pageX, pageY = " + e.nativeEvent.pageX + ", " + e.nativeEvent.pageY);
-   const pressX = e.nativeEvent.locationX - x
-   const pressY = e.nativeEvent.locationY - y
+   const pressX = e.nativeEvent.pageX - x
+   const pressY = e.nativeEvent.pageY - y
 
-   console.log("pressX, pressY = " + e.nativeEvent +e.nativeEvent);
+   console.log("pressX, pressY = " + e.nativeEvent.locationX +e.nativeEvent.locationY);
 
-  //  getPixelRGBA(filePath.uri.replace("file:",""),e.nativeEvent.locationX, e.nativeEvent.locationY)
+  //  getPixelRGBA(filePath.uri.replace("file:",""),Math.round(pressX), Math.round(pressY))
   //  .then(color => {
   //    console.log(color);
   //    setColor1("#"+componentToHex(color[0]) + componentToHex(color[1]) + componentToHex(color[2]));
@@ -64,31 +68,34 @@ const getColorPick = async (e,index) =>{
   //    setPrimaryColor(primaryColors)
   //  }) // [243, 123, 0]
   //  .catch(err => {});
+   
+   if(pressX >= 0 && pressY >=0){
+      if(Platform.OS == 'android'){
+          ImageColorPick.getPixels(filePath.uri.replace("file:",""), pressX, pressY, width, height)
+          .then((image) => {
+            console.log(image)
+            setColor1("#"+image.pixels);
+          let primaryColorsList = primaryColors;
+          primaryColorsList[index]="#"+image.pixels;
+          setPrimaryColor(primaryColorsList);
 
-
-   if(Platform.OS == 'android'){
-      ImageColorPick.getPixels(filePath.uri.replace("file:",""), pressX, pressY, width, height)
-      .then((image) => {
-        console.log(image)
-        setColor1("#"+image.pixels);
-        primaryColors[index] = "#"+image.pixels;
-        setPrimaryColor(primaryColors)
-      })
-      .catch((err) => {
-        console.error(err);
-      });
-   }else{
-      ImageColorPick.getPixels(filePath.uri.replace("file:",""),Math.round(width),Math.round(height),Math.round(pressX),Math.round(pressY),(err,color) => {
-       console.log(color)
-       setColor1(color);
-       primaryColors[index] = color;
-       setPrimaryColor(primaryColors) 
-       console.log(JSON.stringify(primaryColors))
-      });      
+          })
+          .catch((err) => {
+            console.error(err);
+          });
+      }else{
+          let JsonObject = {"filePath":filePath.uri.replace("file:",""),"width":Math.round(width),"height":Math.round(height),"pressX":pressX,"pressY":pressY}
+          ImageColorPick.getPixels(JsonObject,(err,color) => {
+          console.log(color)
+          setColor1(color);
+          primaryColors[index] = color;
+          setPrimaryColor(primaryColors) 
+          console.log(JSON.stringify(primaryColors))
+          });      
+        }
   }
   }
 
-  
   // Camera Permission 
   const requestCameraPermission = async () => {
     if (Platform.OS === 'android') {
@@ -231,6 +238,7 @@ const getColorPick = async (e,index) =>{
    }else{
     ImageColorPick.getPrimaryColorPixels(uri.replace("file:",""),(err,color) => {
       console.log(JSON.stringify(color));
+      // setColor1(color[0])
       setPrimaryColor(color)
    });       
 
@@ -250,20 +258,42 @@ const getColorPick = async (e,index) =>{
           source={{uri:filePath.uri}}
           style={styles.imageStyle}
           />
-             {primaryColors.map((item,index) => {
+
+             <View style={{position:'absolute',margin:5}}>
+                    <Draggable 
+                     x={-100}
+                     y={100}
+                     minX={width1 /2}
+                     maxX={width1}             
+                     minY={10}
+                     maxY={height}
+                     renderColor={primaryColors[0]} renderText="1" 
+                     isCircle  onDragRelease={(e,gestureState)=> getColorPick(e,0,gestureState)} />
+                    <Draggable/>
+                  </View>
+             {/* {primaryColors.map((item,index) => {
                return(
-                  <View key={index} style={{position:'absolute'}}>
-                    <Draggable  x={-110} y={102}  style={{borderWidth: 5, borderColor:"white"}} renderColor={item} renderText={index.toString()} isCircle  onDragRelease={(e)=> getColorPick(e,index)} />
+                  <View key={index} style={{position:'absolute',margin:5}}>
+                    <Draggable 
+                     x={-100}
+                     y={100}
+                     minX={width1 /2}
+                     maxX={width1}             
+                     minY={10}
+                     maxY={height}
+                     renderColor={item} renderText={index.toString()} 
+                     isCircle  onDragRelease={(e,gestureState)=> getColorPick(e,index,gestureState)} />
                     <Draggable/>
                   </View>
                )
               }
-           )}
+           )} */}
         
          <View style={{backgroundColor:"white",justifyContent:'center',width:'100%',height:'10%',flexDirection:'row'}}>
              {primaryColors.map((item,index) => {
                return(
-                  <View key={index} style={{width:50,height:65,backgroundColor:item,}}></View>
+                  <View key={index} style={{width:50,height:65,backgroundColor:item,}}><Text>{item}</Text></View>
+                  
                )
               }
            )}
@@ -318,8 +348,8 @@ const styles = StyleSheet.create({
     width: 250,
   },
   imageStyle: {
-    width: "100%",
     height: "65%",
+    width:"100%",
     margin: 5,
   },
 });

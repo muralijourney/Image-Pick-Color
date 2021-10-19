@@ -50,19 +50,21 @@ public class BitmapModule extends ReactContextBaseJavaModule {
                 return;
             }
 
-            boolean hasAlpha = bitmap.hasAlpha();
-            Log.d("dddd","xaxis"+xaxis);
-            Log.d("dddd","xaxis"+yaxis);
+            if(yaxis < bitmap.getHeight() && xaxis < bitmap.getWidth()) {
+                boolean hasAlpha = bitmap.hasAlpha();
+                Log.d("dddd", "xaxis" + xaxis);
+                Log.d("dddd", "xaxis" + yaxis);
 
-            int color = bitmap.getPixel((int)xaxis, (int)yaxis);
-            String hex = Integer.toHexString(color);
+                int color = bitmap.getPixel((int) xaxis, (int) yaxis);
+                String hex = Integer.toHexString(color);
 
-            result.putInt("width", width);
-            result.putInt("height", height);
-            result.putBoolean("hasAlpha", hasAlpha);
-            result.putString("pixels", hex.substring(2,8));
+                result.putInt("width", width);
+                result.putInt("height", height);
+                result.putBoolean("hasAlpha", hasAlpha);
+                result.putString("pixels", hex.substring(2, 8));
 
-            promise.resolve(result);
+                promise.resolve(result);
+            }
 
         } catch (Exception e) {
             promise.reject(e);
@@ -72,13 +74,16 @@ public class BitmapModule extends ReactContextBaseJavaModule {
 
 
     @ReactMethod
-    public void getPrimaryColorPixels(String filePath,int width, int height,int pressx,int pressy,final Promise promise) {
+    public void getPrimaryColorPixels(String filePath,int width, int height,double pressx,double pressy,final Promise promise) {
         WritableArray color = Arguments.createArray();
-       Bitmap bitmap = BitmapFactory.decodeFile(filePath);
+//       Bitmap bitmap = BitmapFactory.decodeFile(filePath);
+//        BitmapFactory.Options options = new BitmapFactory.Options();
+//        options.inPreferredConfig = Bitmap.Config.ARGB_8888;
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+
+        Bitmap bitmap = Bitmap.createScaledBitmap(BitmapFactory.decodeFile(filePath,options), width, height, false);
         Log.d("text","xyaxis Value First"+  pressx +pressy );
-       // Bitmap bitmap = Bitmap.createScaledBitmap(BitmapFactory.decodeFile(filePath,options), width, height, false);
         Palette.from(bitmap).generate(new Palette.PaletteAsyncListener() {
             @Override
             public void onGenerated(Palette palette) {
@@ -92,18 +97,15 @@ public class BitmapModule extends ReactContextBaseJavaModule {
                             int r = Color.red(rgb);
                             int g = Color.green(rgb);
                             int b = Color.blue(rgb);
+                            int pixel_color_first = Color.rgb(r, g, b);
 
-                            // add 1 value for alpha factor
-                            color.pushString(String.format("#%02x%02x%02x", r, g, b));
-                            for (int x = 0; x < bitmap.getWidth(); x++) {
-                            for (int y = 0; y < bitmap.getHeight(); y++) {
+                           for (int x = 0; x < width; x++) {
+                            for (int y = 0; y < height; y++) {
                                     int pixel = bitmap.getPixel(x,y);
-
                                     //Reading colors
                                     int redValue = Color.red(pixel);
                                     int blueValue = Color.blue(pixel);
                                     int greenValue = Color.green(pixel);
-                                    int pixel_color_first = Color.rgb(r, g, b);
                                     int pixel_color = Color.rgb(redValue,greenValue, blueValue );
                                     if (pixel_color_first == pixel_color) {
                                         Log.d("text","xyaxis Value First"+  x +y);
@@ -114,6 +116,8 @@ public class BitmapModule extends ReactContextBaseJavaModule {
                                 }
                             }
 
+                            // add 1 value for alpha factor
+                            color.pushString(String.format("#%02x%02x%02x", r, g, b));
 
 
 //                            for (int x = 0; x < bitmap.getWidth(); x++) {

@@ -16,7 +16,6 @@
     "react-native": "0.66.0",
     "react-native-canvas": "^0.1.38",
     "react-native-draggable": "^3.3.0",
-    "react-native-get-pixel": "^0.0.5",
     "react-native-get-pixel-color-update": "^0.0.11",
     "react-native-image-picker": "^4.1.1",
     "react-native-view-shot": "^3.1.2",
