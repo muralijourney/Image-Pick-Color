@@ -10,9 +10,11 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "color-finder": "bwiswell/color-finder",
     "install": "^0.13.0",
     "npm": "^8.0.0",
     "react": "17.0.2",
+    "react-draggable": "^4.4.4",
     "react-native": "0.66.0",
     "react-native-draggable": "^3.3.0",
     "react-native-image-picker": "^4.1.1",
