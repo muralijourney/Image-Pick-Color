@@ -43,59 +43,6 @@ const [height, setHeight] = useState(0)
 const [primaryColors, setPrimaryColor] = useState([])
 
 
-function componentToHex(c) {
-  var hex = c.toString(16);
-  return hex.length == 1 ? "0" + hex : hex;
-}
-
-
-// GetColor Pick 
-const getColorPick = async (e,index,gestureState) =>{
-   console.log("locX, locY = " + x +y);
-   console.log("index = " + index);
-
-   console.log("pageX, pageY = " + e.nativeEvent.pageX + ", " + e.nativeEvent.pageY);
-   const pressX = e.nativeEvent.pageX - x
-   const pressY = e.nativeEvent.pageY - y
-
-   console.log("pressX, pressY = " + e.nativeEvent.locationX +e.nativeEvent.locationY);
-
-  //  getPixelRGBA(filePath.uri.replace("file:",""),Math.round(pressX), Math.round(pressY))
-  //  .then(color => {
-  //    console.log(color);
-  //    setColor1("#"+componentToHex(color[0]) + componentToHex(color[1]) + componentToHex(color[2]));
-  //    primaryColors[index] = "#"+componentToHex(color[0]) + componentToHex(color[1]) + componentToHex(color[2]);
-  //    setPrimaryColor(primaryColors)
-  //  }) // [243, 123, 0]
-  //  .catch(err => {});
-   
-   if(pressX >= 0 && pressY >=0){
-      if(Platform.OS == 'android'){
-          ImageColorPick.getPixels(filePath.uri.replace("file:",""), pressX, pressY, width, height)
-          .then((image) => {
-            console.log(image)
-            setColor1("#"+image.pixels);
-          let primaryColorsList = primaryColors;
-          primaryColorsList[index]="#"+image.pixels;
-          setPrimaryColor(primaryColorsList);
-
-          })
-          .catch((err) => {
-            console.error(err);
-          });
-      }else{
-          let JsonObject = {"filePath":filePath.uri.replace("file:",""),"width":Math.round(width),"height":Math.round(height),"pressX":pressX,"pressY":pressY}
-          ImageColorPick.getPixels(JsonObject,(err,color) => {
-          console.log(color)
-          setColor1(color);
-          primaryColors[index] = color;
-          setPrimaryColor(primaryColors) 
-          console.log(JSON.stringify(primaryColors))
-          });      
-        }
-  }
-  }
-
   // Camera Permission 
   const requestCameraPermission = async () => {
     if (Platform.OS === 'android') {
@@ -188,7 +135,10 @@ const getColorPick = async (e,index,gestureState) =>{
           return;
         }
         setFilePath(response.assets[0]);
-        getPrimaryColor(response.assets[0].uri);
+        // getPrimaryColor(response.assets[0].uri);
+
+        getPrimaryColorPixelList(response.assets[0].uri);
+
       });
     }
   };
@@ -218,32 +168,99 @@ const getColorPick = async (e,index,gestureState) =>{
         return;
       }
       setFilePath(response.assets[0]);
-      getPrimaryColor(response.assets[0].uri);
+      // getPrimaryColor(response.assets[0].uri);
+      getPrimaryColorPixelList(response.assets[0].uri);
     });
   };
 
 
-  // Primary Color List 
-  const getPrimaryColor = async (uri) => {
+   // Primary Color List 
+   const getPrimaryColor = async (uri) => {
     if(Platform.OS == 'android'){
-
-    ImageColorPick.getPrimaryColorPixels(uri.replace("file:",""),width, height,x,y)
-    .then((image) => {
-      console.log(image)
-      setPrimaryColor(image)
-    })
-    .catch((err) => {
-      console.error(err);
-    });
+      ImageColorPick.getPrimaryColorPixels(uri.replace("file:",""),width, height,x,y)
+        .then((image) => {
+          var colorValue=[];
+          image.map((item,index) => {
+            console.log("dskfkasdfkasdkfkasd"+item);
+            let colorObject = {"color":item,"colorindex":index,"x":100,"y":-100};
+            colorValue.push(colorObject);
+          })
+          setPrimaryColor([...colorValue])
+        }).catch((err) => {
+          console.error(err);
+      });
    }else{
-    ImageColorPick.getPrimaryColorPixels(uri.replace("file:",""),(err,color) => {
-      console.log(JSON.stringify(color));
-      // setColor1(color[0])
-      setPrimaryColor(color)
-   });       
-
+        ImageColorPick.getPrimaryColorPixels(uri.replace("file:",""),(err,color) => {
+          var colorValue=[];
+          color.map((item,index) => {
+            let colorObject = {"color":item,"colorindex":index,"x":100,"y":-100};
+            colorValue.push(colorObject);
+          })
+          setPrimaryColor([...colorValue])
+        });       
    }
   }
+
+
+
+
+// GetColor Pick 
+const getColorPick = async (e,index,gestureState) =>{
+  console.log("locX, locY = " + x +y);
+  console.log("index = " + index);
+
+  console.log("pageX, pageY = " + e.nativeEvent.pageX + ", " + e.nativeEvent.pageY);
+  const pressX = e.nativeEvent.pageX - x
+  const pressY = e.nativeEvent.pageY - y
+  const X = e.nativeEvent.pageX 
+  const Y = e.nativeEvent.pageY 
+  console.log("pressX, pressY = " + e.nativeEvent.locationX +e.nativeEvent.locationY);
+  
+  if(pressX >= 0 && pressY >=0){
+     if(Platform.OS == 'android'){
+         ImageColorPick.getPixels(filePath.uri.replace("file:",""), pressX, pressY, width, height)
+         .then((image) => {
+            console.log(image)
+            let colorObject = {"color": "#"+image.pixels, "colorindex": index,"x":X,"y":Y};
+            primaryColors[index] = colorObject;
+            setPrimaryColor([...primaryColors]) 
+            console.log(JSON.stringify(primaryColors))
+          })
+         .catch((err) => {
+           console.error(err);
+         });
+     }else{
+         let JsonObject = {"filePath":filePath.uri.replace("file:",""),"width":Math.round(width),"height":Math.round(height),"pressX":pressX,"pressY":pressY}
+         ImageColorPick.getPixels(JsonObject,(err,color) => {
+            let colorObject = {"color": color,"colorindex":index,"x":X,"y":Y};
+            primaryColors[index] = colorObject;
+            setPrimaryColor([...primaryColors]) 
+            console.log(JSON.stringify(primaryColors))
+         });      
+       }
+   }
+ }
+
+
+ const getPrimaryColorPixelList = async (uri) =>{
+
+    if(Platform.OS == 'android'){
+
+      ImageColorPick.getPrimaryColorPixelsList(uri.replace("file:",""),width,height)
+      .then((primaryColorsList) => {
+         console.log(primaryColorsList)
+        //  let colorObject = {"color": "#"+image.pixels, "colorindex": index,"x":X,"y":Y};
+        //  primaryColors[index] = colorObject;
+        //  setPrimaryColor([...primaryColors]) 
+        //  console.log(JSON.stringify(primaryColors))
+       }).catch((err) => {
+        console.error(err);
+      });
+    }else{
+
+    }
+ }
+
 
   return (
     <SafeAreaView style={{flex: 1}}>
@@ -258,20 +275,7 @@ const getColorPick = async (e,index,gestureState) =>{
           source={{uri:filePath.uri}}
           style={styles.imageStyle}
           />
-
-             <View style={{position:'absolute',margin:5}}>
-                    <Draggable 
-                     x={-100}
-                     y={100}
-                     minX={width1 /2}
-                     maxX={width1}             
-                     minY={10}
-                     maxY={height}
-                     renderColor={primaryColors[0]} renderText="1" 
-                     isCircle  onDragRelease={(e,gestureState)=> getColorPick(e,0,gestureState)} />
-                    <Draggable/>
-                  </View>
-             {/* {primaryColors.map((item,index) => {
+          {primaryColors.map((item,index) => {
                return(
                   <View key={index} style={{position:'absolute',margin:5}}>
                     <Draggable 
@@ -281,18 +285,18 @@ const getColorPick = async (e,index,gestureState) =>{
                      maxX={width1}             
                      minY={10}
                      maxY={height}
-                     renderColor={item} renderText={index.toString()} 
+                     renderColor={item.color} renderText={index.toString()} 
                      isCircle  onDragRelease={(e,gestureState)=> getColorPick(e,index,gestureState)} />
                     <Draggable/>
                   </View>
                )
               }
-           )} */}
+           )}
         
          <View style={{backgroundColor:"white",justifyContent:'center',width:'100%',height:'10%',flexDirection:'row'}}>
              {primaryColors.map((item,index) => {
                return(
-                  <View key={index} style={{width:50,height:65,backgroundColor:item,}}><Text>{item}</Text></View>
+                  <View key={index} style={{width:50,height:65,backgroundColor:item.color,}}></View>
                   
                )
               }

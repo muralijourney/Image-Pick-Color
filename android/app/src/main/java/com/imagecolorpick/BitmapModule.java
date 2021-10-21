@@ -16,6 +16,7 @@ import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableNativeArray;
 import com.facebook.react.bridge.WritableNativeMap;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.File;
@@ -66,6 +67,40 @@ public class BitmapModule extends ReactContextBaseJavaModule {
                 promise.resolve(result);
             }
 
+        } catch (Exception e) {
+            promise.reject(e);
+        }
+
+    }
+
+
+    @ReactMethod
+    public void getPrimaryColorPixelsList(String filePath,int width, int height,final Promise promise) {
+        try {
+            Log.d("dddd","dddd"+filePath);
+            WritableNativeArray array = new WritableNativeArray();
+
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+
+            Bitmap bitmap = Bitmap.createScaledBitmap(BitmapFactory.decodeFile(filePath,options), width, height, false);
+            if (bitmap == null) {
+                promise.reject("Failed to decode. Path is incorrect or image is corrupted");
+                return;
+            }
+
+            for (int x = 0; x < bitmap.getWidth(); x++) {
+                for (int y = 0; y < bitmap.getHeight(); y++) {
+                    WritableNativeMap result = new WritableNativeMap();
+                    int pixelLength = bitmap.getPixel(x, y);
+                    Log.d("dfsafasdfas","sdfsadfasd");
+                    result.putInt("x", x);
+                    result.putInt("y", y);
+                    result.putInt("pixels", pixelLength);
+                    array.pushMap(result);
+                }
+            }
+            promise.resolve(array);
         } catch (Exception e) {
             promise.reject(e);
         }
