@@ -34,6 +34,39 @@ public class BitmapModule extends ReactContextBaseJavaModule {
         return "ImageColorPick";
     }
 
+    @ReactMethod
+    public void getRGBArray(String filePath, final Promise promise) {
+        try {
+            WritableNativeArray result = new WritableNativeArray();
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+            Bitmap bitmap = BitmapFactory.decodeFile(filePath, options);
+
+            if (bitmap == null) {
+                promise.reject("Failed to decode. Path is incorrect or image is corrupted");
+                return;
+            }
+
+            for (int x = 0; x < bitmap.getWidth(); x++) {
+                WritableNativeArray column = new WritableNativeArray();
+                for (int y = 0; y < bitmap.getHeight(); y++) {
+                    WritableNativeArray rgb = new WritableNativeArray();
+                    int color = bitmap.getPixel(x, y);
+                    rgb.pushInt(Color.red(color));
+                    rgb.pushInt(Color.green(color));
+                    rgb.pushInt(Color.blue(color));
+                    column.pushArray(rgb);
+                }
+                result.pushArray(column);
+            }
+
+            promise.resolve(result);
+
+        } catch (Exception e) {
+            promise.reject(e);
+        }
+    }
+
 
 
     @ReactMethod

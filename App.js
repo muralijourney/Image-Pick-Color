@@ -25,22 +25,21 @@ import {
   Dimensions,
   PermissionsAndroid
 } from 'react-native';
+import ColorFinder from 'color-finder'
+
 const { ImageColorPick } = NativeModules;
-const {width1, height1} = Dimensions.get('window');
-
-
-
 
 const App = () => {
-const [color1, setColor1] = useState("");
-const [filePath, setFilePath] = useState({});
-
-const [x, setX] = useState(0)
-const [y, setY] = useState(0)
-const [width, setWidth] = useState(0)
-const [height, setHeight] = useState(0)
-const [primaryColors, setPrimaryColor] = useState([])
-
+  const [color, setColor] = useState("");
+  const [filePath, setFilePath] = useState({});
+  const [layout, setLayout] = useState({
+    x: 0,
+    y: 0,
+    width: 0,
+    height: 0
+  });
+  const [colorFinder, setColorFinder] = useState(null);
+  const [primaryColors, setPrimaryColors] = useState([]);
 
   // Camera Permission 
   const requestCameraPermission = async () => {
@@ -83,7 +82,6 @@ const [primaryColors, setPrimaryColor] = useState([])
     } else return true;
   };
 
-
    // external Read Permission
    const requestReadWritePermission = async () => {
     if (Platform.OS === 'android') {
@@ -104,6 +102,7 @@ const [primaryColors, setPrimaryColor] = useState([])
       return false;
     } else return true;
   };
+
   // Capture Image 
   const captureImage = async (type) => {
     let options = {
@@ -134,15 +133,9 @@ const [primaryColors, setPrimaryColor] = useState([])
           return;
         }
         setFilePath(response.assets[0]);
-        // getPrimaryColor(response.assets[0].uri);
-
-        getPrimaryColorPixelList(response.assets[0].uri);
-
       });
     }
-  };
-
-  
+  }; 
 
   // Choose File 
   const chooseFile = (type) => {
@@ -167,127 +160,83 @@ const [primaryColors, setPrimaryColor] = useState([])
         return;
       }
       setFilePath(response.assets[0]);
-      // getPrimaryColor(response.assets[0].uri);
-      getPrimaryColorPixelList(response.assets[0].uri);
     });
   };
 
+  // uri.replace("file:","")
 
-   // Primary Color List 
-   const getPrimaryColor = async (uri) => {
-    if(Platform.OS == 'android'){
-      ImageColorPick.getPrimaryColorPixels(uri.replace("file:",""),width, height,x,y)
-        .then((image) => {
-          var colorValue=[];
-          image.map((item,index) => {
-            console.log("dskfkasdfkasdkfkasd"+item);
-            let colorObject = {"color":item,"colorindex":index,"x":100,"y":-100};
-            colorValue.push(colorObject);
-          })
-          setPrimaryColor([...colorValue])
-        }).catch((err) => {
-          console.error(err);
-      });
-   }else{
-        ImageColorPick.getPrimaryColorPixels(uri.replace("file:",""),(err,color) => {
-          var colorValue=[];
-          color.map((item,index) => {
-            let colorObject = {"color":item,"colorindex":index,"x":100,"y":-100};
-            colorValue.push(colorObject);
-          })
-          setPrimaryColor([...colorValue])
-     });       
-   }
+  const createColorFinder = () => {
+    if (filePath.uri) {
+      if (Platform.OS === 'android') {
+        console.log('Starting')
+        ImageColorPick.getRGBArray(filePath.uri.replace('file:', ''))
+        .then(rgbArray => {
+          const colorFinder = ColorFinder.fromRGBArray(rgbArray);
+          setColorFinder(colorFinder);
+          const mainColors = colorFinder.mainColors();
+          console.log(mainColors)
+          setPrimaryColors(mainColors);
+        })
+      } else {
+        //Not handled yet
+        return
+      }
+    }
   }
 
-
-
-
-// GetColor Pick 
-const getColorPick = async (e,index,gestureState) =>{
-  console.log("locX, locY = " + x +y);
-  console.log("index = " + index);
-
-  console.log("pageX, pageY = " + e.nativeEvent.pageX + ", " + e.nativeEvent.pageY);
-  const pressX = e.nativeEvent.pageX - x
-  const pressY = e.nativeEvent.pageY - y
-  const X = e.nativeEvent.pageX 
-  const Y = e.nativeEvent.pageY 
-  console.log("pressX, pressY = " + e.nativeEvent.locationX +e.nativeEvent.locationY);
-  
-  if(pressX >= 0 && pressY >=0){
-     if(Platform.OS == 'android'){
-         ImageColorPick.getPixels(filePath.uri.replace("file:",""), pressX, pressY, width, height)
-         .then((image) => {
-            console.log(image)
-            let colorObject = {"color": "#"+image.pixels, "colorindex": index,"x":X,"y":Y};
-            primaryColors[index] = colorObject;
-            setPrimaryColor([...primaryColors]) 
-            console.log(JSON.stringify(primaryColors))
-          })
-         .catch((err) => {
-           console.error(err);
-         });
-     }else{
-         let JsonObject = {"filePath":filePath.uri.replace("file:",""),"width":Math.round(width),"height":Math.round(height),"pressX":pressX,"pressY":pressY}
-         ImageColorPick.getPixels(JsonObject,(err,color) => {
-            let colorObject = {"color": color,"colorindex":index,"x":X,"y":Y};
-            primaryColors[index] = colorObject;
-            setPrimaryColor([...primaryColors]) 
-            console.log(JSON.stringify(primaryColors))
-         });      
-       }
-   }
- }
-
-
- const getPrimaryColorPixelList = async (uri) =>{
-    if(Platform.OS == 'android'){
-      ImageColorPick.getPrimaryColorPixelsList(uri.replace("file:",""),width,height)
-      .then((primaryColorsList) => {
-         console.log(primaryColorsList)
-      
-       }).catch((err) => {
-        console.error(err);
-      });
-    }else{
-      let JsonObject = {"filePath":uri.replace("file:",""),"width":width,"height":height}
-      ImageColorPick.getPrimaryColorPixelsList(JsonObject,(err,primaryColorsList) => {
-        console.log(primaryColorsList)
-      });      
-
-    }
- }
-
+  const getColor = (e) => {
+    if (colorFinder !== null && colorFinder !== undefined) {
+      const x = e.nativeEvent.locationX;
+      const y = e.nativeEvent.locationY;
+      setColor(colorFinder.colorAtPos(x, y, layout));
+    }    
+  }
 
   return (
     <SafeAreaView style={{flex: 1}}>
       <View style={styles.container}>
         <Image
-          onLayout={(e) => {
-            setX(e.nativeEvent.layout.x)
-            setY(e.nativeEvent.layout.y)
-            setWidth(e.nativeEvent.layout.width)
-            setHeight(e.nativeEvent.layout.height)
-          }}
+          onLoad={() => createColorFinder()}
+          onLayout={e => setLayout(e.nativeEvent.layout)}
           source={{uri:filePath.uri}}
           style={styles.imageStyle}
           />
-          {primaryColors.map((item,index) => {
+          {primaryColors.map((item, index) => {
+              const result = colorFinder.locateColorOnPage(item, layout);
+              console.log(`x: ${result["x"]}, y: ${result["y"]}`)
                return(
-                  <View key={index} style={{position:'absolute',margin:5}}>
-                    <Draggable 
-                     x={-100}
-                     y={100}
-                     minX={width1 /2}
-                     maxX={width1}             
-                     minY={10}
-                     maxY={height}
-                     renderColor={item.color} renderText={index.toString()} 
-                     isCircle  onDragRelease={(e,gestureState)=> getColorPick(e,index,gestureState)} />
-                    <Draggable/>
-                  </View>
+
+                  <View
+                    key={index}
+                    style={{
+                      position: 'absolute',
+                      left: result["x"],
+                      top: result["y"],
+                      width: 30,
+                      height: 30,
+                      borderRadius: 10,
+                      borderColor: 'white',
+                      borderWidth: 3,
+                      borderStyle: 'solid',
+                      backgroundColor: item
+                    }}
+                  />
                )
+
+                  {/* <View key={index} style={{position:'absolute', margin:5}}>
+                    <Draggable 
+                      x={x}
+                      y={y}
+                      minX={0}
+                      maxX={layout.width}             
+                      minY={0}
+                      maxY={layout.height}
+                      renderColor={item} 
+                      renderText={index.toString()} 
+                      isCircle  
+                      onDragRelease={e => getColor(e)} />
+                    <Draggable/>
+                  </View> */}
               }
            )}
         
