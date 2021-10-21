@@ -161,5 +161,69 @@ RCT_EXPORT_METHOD(getPixels:(NSDictionary *)path callback:(RCTResponseSenderBloc
    callback(@[[NSNull null], mu]);
 
 }
+
+
+
+
+
+
+RCT_EXPORT_METHOD(getPrimaryColorPixelsList:(NSDictionary *)path callback:(RCTResponseSenderBlock)callback)
+{
+  
+  
+  //[self convertDictToCocoaObject:path]];
+  NSInteger width = [path[@"width"] integerValue];
+  NSInteger height = [path[@"height"] integerValue];
+
+
+  UIImage *image = [UIImage imageWithContentsOfFile:path[@"filePath"]];
+  CGSize newSize = CGSizeMake(width,height);
+  UIGraphicsBeginImageContext(newSize);
+  [image drawInRect:CGRectMake(0,0, newSize.width, newSize.height)];
+  UIImage *newImage = UIGraphicsGetImageFromCurrentImageContext();
+  UIGraphicsEndImageContext();
+  CGImageRef cgImage = newImage.CGImage;
+  
+  NSUInteger bytesPerPixel = 4;
+  NSUInteger bytesPerRow = bytesPerPixel * width;
+  NSUInteger bitsPerComponent = 8;
+
+  CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+  unsigned char *rawData = (unsigned char*) calloc(height * width * 4, sizeof(unsigned char));
+
+
+  CGContextRef context = CGBitmapContextCreate(rawData, width, height,
+                  bitsPerComponent, bytesPerRow, colorSpace,
+                  kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big);
+
+  CGColorSpaceRelease(colorSpace);
+  
+  CGContextDrawImage(context, CGRectMake(0, 0, width, height), cgImage);
+  CGContextRelease(context);
+
+
+  NSMutableArray *result = [NSMutableArray array];
+  
+  for (int x = 0 ; x < width ; ++x)
+  {
+    for (int y = 0 ; y < height ; ++y)
+    {
+      
+      NSUInteger byteIndex = (bytesPerRow * y) + x * bytesPerPixel;
+      NSMutableDictionary *mutableDict = [NSMutableDictionary dictionary];
+      [mutableDict setValue: [NSNumber numberWithInt:x]  forKey:@"x"];
+      [mutableDict setValue:[NSNumber numberWithInt:y]  forKey:@"y"];
+      [mutableDict setValue:[NSNumber numberWithUnsignedInteger:byteIndex] forKey:@"pixels"];
+      [result addObject:mutableDict];
+    }
+  }
+  
+  NSLog(@"%@", result);
+  callback(@[[NSNull null], result]);
+
+}
+
+
+
 @end
 

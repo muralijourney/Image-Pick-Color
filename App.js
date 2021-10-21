@@ -26,7 +26,6 @@ import {
   PermissionsAndroid
 } from 'react-native';
 const { ImageColorPick } = NativeModules;
-import { getPixelRGBA } from 'react-native-get-pixel-color-update';
 const {width1, height1} = Dimensions.get('window');
 
 
@@ -197,7 +196,7 @@ const [primaryColors, setPrimaryColor] = useState([])
             colorValue.push(colorObject);
           })
           setPrimaryColor([...colorValue])
-        });       
+     });       
    }
   }
 
@@ -243,20 +242,19 @@ const getColorPick = async (e,index,gestureState) =>{
 
 
  const getPrimaryColorPixelList = async (uri) =>{
-
     if(Platform.OS == 'android'){
-
       ImageColorPick.getPrimaryColorPixelsList(uri.replace("file:",""),width,height)
       .then((primaryColorsList) => {
          console.log(primaryColorsList)
-        //  let colorObject = {"color": "#"+image.pixels, "colorindex": index,"x":X,"y":Y};
-        //  primaryColors[index] = colorObject;
-        //  setPrimaryColor([...primaryColors]) 
-        //  console.log(JSON.stringify(primaryColors))
+      
        }).catch((err) => {
         console.error(err);
       });
     }else{
+      let JsonObject = {"filePath":uri.replace("file:",""),"width":width,"height":height}
+      ImageColorPick.getPrimaryColorPixelsList(JsonObject,(err,primaryColorsList) => {
+        console.log(primaryColorsList)
+      });      
 
     }
  }
