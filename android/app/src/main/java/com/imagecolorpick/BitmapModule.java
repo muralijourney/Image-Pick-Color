@@ -35,13 +35,13 @@ public class BitmapModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void getRGBArray(String filePath, final Promise promise) {
+    public void getRGBArray(String filePath,int width, int height, final Promise promise) {
         try {
             WritableNativeArray result = new WritableNativeArray();
             BitmapFactory.Options options = new BitmapFactory.Options();
             options.inPreferredConfig = Bitmap.Config.ARGB_8888;
-            Bitmap bitmap = BitmapFactory.decodeFile(filePath, options);
-
+           // Bitmap bitmap = BitmapFactory.decodeFile(filePath, options);
+            Bitmap bitmap = Bitmap.createScaledBitmap(BitmapFactory.decodeFile(filePath,options), width, height, false);
             if (bitmap == null) {
                 promise.reject("Failed to decode. Path is incorrect or image is corrupted");
                 return;

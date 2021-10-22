@@ -15,6 +15,79 @@
 
 RCT_EXPORT_MODULE()
 
+RCT_EXPORT_METHOD(getRGBArray:(NSDictionary *)path callback:(RCTResponseSenderBlock)callback)
+{
+
+  //[self convertDictToCocoaObject:path]];
+  NSInteger width1 = [path[@"width"] integerValue];
+  NSInteger height1 = [path[@"height"] integerValue];
+  NSInteger x = [path[@"pressX"] integerValue];
+  NSInteger y = [path[@"pressY"] integerValue];
+
+  UIImage *image = [UIImage imageWithContentsOfFile:path[@"filePath"]];
+  CGSize newSize = CGSizeMake(width1,height1);
+  UIGraphicsBeginImageContext(newSize);
+  [image drawInRect:CGRectMake(0,0, newSize.width, newSize.height)];
+  UIImage *newImage = UIGraphicsGetImageFromCurrentImageContext();
+  UIGraphicsEndImageContext();
+  CGImageRef cgImage = newImage.CGImage;
+  
+  
+  
+  CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+  unsigned char *rawData = (unsigned char*) calloc((NSUInteger)height1 * (NSUInteger)width1 * 4, sizeof(unsigned char));
+
+  NSUInteger bytesPerPixel = 4;
+  NSUInteger bytesPerRow = (NSUInteger)bytesPerPixel * (NSUInteger)width1;
+  NSUInteger bitsPerComponent = 8;
+
+
+  CGContextRef context = CGBitmapContextCreate(rawData, (NSUInteger)width1, (NSUInteger)height1,
+                  bitsPerComponent, bytesPerRow, colorSpace,
+                  kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big);
+
+  CGColorSpaceRelease(colorSpace);
+  CGContextDrawImage(context, CGRectMake(0, 0, (NSUInteger)width1, (NSUInteger)height1), cgImage);
+  CGContextRelease(context);
+
+
+ NSMutableArray *result = [NSMutableArray array];
+  
+  // Now your rawData contains the image data in the RGBA8888 pixel format.
+  for (int x = 0 ; x < width1; ++x)
+  {
+    NSMutableArray *column = [NSMutableArray array];
+    for (int y = 0 ; y < height1; ++y)
+    {
+      NSMutableArray *rgb = [NSMutableArray array];
+
+      NSUInteger byteIndex = (bytesPerRow * y) + x * bytesPerPixel;
+      CGFloat alpha = ((CGFloat) rawData[byteIndex + 3] ) / 255.0f;
+      CGFloat red   = ((CGFloat) rawData[byteIndex]     ) / alpha;
+      CGFloat green = ((CGFloat) rawData[byteIndex + 1] ) / alpha;
+      CGFloat blue  = ((CGFloat) rawData[byteIndex + 2] ) / alpha;
+      byteIndex += bytesPerPixel;
+      
+      NSNumber *redColor=[NSNumber numberWithInteger:red];
+      NSNumber *greenColor =[NSNumber numberWithInteger:green];
+      NSNumber *blueColor=[NSNumber numberWithInteger:blue];
+
+      // nan
+      [rgb addObject:redColor];
+      [rgb addObject:greenColor];
+      [rgb addObject:blueColor];
+      
+      [column addObject:rgb];
+    }
+    [result addObject:column];
+  }
+  free(rawData);
+  callback(@[[NSNull null], result]);
+
+}
+
+
+
 RCT_EXPORT_METHOD(getPrimaryColorPixels:(NSString *)path callback:(RCTResponseSenderBlock)callback)
 {
   UIImage *image = [UIImage imageWithContentsOfFile:path];
